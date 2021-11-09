@@ -15,11 +15,11 @@ public class OrderedAdvisor {
 
     @Aspect
     @Order(1) // 가장 처음 실행될 어드바이저
-    public static class doSomethingAdvisor1 {
+    public static class ControllerAdvisor {
 
         @Around("io.github.shirohoo.springaop.pointcut.Pointcuts.controllers()")
-        public Object doSomething(ProceedingJoinPoint joinPoint) throws Throwable {
-            log.info("doSomethingAdvisor1 실행");
+        public Object execute(ProceedingJoinPoint joinPoint) throws Throwable {
+            log.info("ControllerAdvisor 실행");
             return joinPoint.proceed();
         }
 
@@ -27,11 +27,11 @@ public class OrderedAdvisor {
 
     @Aspect
     @Order(2) // 두번째로 실행될 어드바이저
-    public static class doSomethingAdvisor2 {
+    public static class ServiceAdvisor {
 
         @Around("io.github.shirohoo.springaop.pointcut.Pointcuts.services()")
-        public Object doSomething(ProceedingJoinPoint joinPoint) throws Throwable {
-            log.info("doSomethingAdvisor2 실행");
+        public Object execute(ProceedingJoinPoint joinPoint) throws Throwable {
+            log.info("ServiceAdvisor 실행");
             return joinPoint.proceed();
         }
 
