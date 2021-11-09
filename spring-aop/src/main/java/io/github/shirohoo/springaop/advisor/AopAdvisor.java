@@ -24,4 +24,5 @@ public class AopAdvisor {
     public Object doSomething_3(ProceedingJoinPoint joinPoint) throws Throwable { // <- 어드바이스
         return joinPoint.proceed();
     }
+
 }
