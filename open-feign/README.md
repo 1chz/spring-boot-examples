@@ -33,7 +33,7 @@ dependencies {
 
 ```java
 @Configuration
-@EnableFeignClients(basePackages = "io.github.shirohoo.openfeign.client") // OpenFeignClient를 활성화
+@EnableFeignClients(basePackages = "io.github.shirohoo.openfeign.client") // OpenFeignClient를 활성화. 별도의 설정클래스에 추가했으므로 콤포넌트 스캔을 위해 베이스패키지를 지정
 public class OpenFeignConfig {
 
     @Bean
@@ -50,6 +50,39 @@ public class OpenFeignConfig {
 ```
 
 <br />
+
+`Level.FULL` 설정 시 `OpenFeign`이 제공하는 기본 로거 구현체를 사용하기 위해서는 로깅 레벨을 `DEBUG`까지 허용해줘야 한다.
+
+<br />
+
+```yaml
+# application.yaml
+logging:
+  level:
+    # 이렇게 FeignClient가 위치한 패키지별로 로깅 레벨을 설정할수도 있다
+    io.github.shirohoo.openfeign.client: DEBUG
+```
+
+<br />
+
+```shell
+i.g.s.c.FeignClient - [FeignClient#method] ---> GET https://jsonplaceholder.typicode.com/todos HTTP/1.1
+i.g.s.c.FeignClient - [FeignClient#method] Content-Length: 277
+i.g.s.c.FeignClient - [FeignClient#method] Content-Type: application/json
+i.g.s.c.FeignClient - [FeignClient#method]
+i.g.s.c.FeignClient - [FeignClient#method] {}
+i.g.s.c.FeignClient - [FeignClient#method] ---> END HTTP (277-byte body)
+i.g.s.c.FeignClient - [FeignClient#method] <--- HTTP/1.1 200 200 (737ms)
+i.g.s.c.FeignClient - [FeignClient#method] connection: Keep-Alive
+i.g.s.c.FeignClient - [FeignClient#method] content-type: application/json;charset=UTF-8
+i.g.s.c.FeignClient - [FeignClient#method] date: Fri, 12 Nov 2021 03:51:08 GMT
+i.g.s.c.FeignClient - [FeignClient#method] keep-alive: timeout=5, max=100
+i.g.s.c.FeignClient - [FeignClient#method] server: Apache
+i.g.s.c.FeignClient - [FeignClient#method] transfer-encoding: chunked
+i.g.s.c.FeignClient - [FeignClient#method]
+i.g.s.c.FeignClient - [FeignClient#method] {"data":"data"}
+i.g.s.c.FeignClient - [FeignClient#method] <--- END HTTP (310-byte body)
+```
 
 ## 클라이언트
 
