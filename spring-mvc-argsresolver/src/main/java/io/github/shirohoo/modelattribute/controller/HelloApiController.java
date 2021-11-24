@@ -4,6 +4,7 @@ import io.github.shirohoo.modelattribute.model.Person;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
@@ -17,8 +18,14 @@ public class HelloApiController {
     }
 
     @GetMapping("/v2/hello")
-    public String helloV2(@ModelAttribute Person person) {
+    public Person helloV2(@ModelAttribute Person person) {
         log.info("person={}", person);
+        return person;
+    }
+
+    @GetMapping("/v3/hello")
+    public String helloV2(String name, int age) {
+        log.info("name={}, age={}", name, age);
         return "ok";
     }
 

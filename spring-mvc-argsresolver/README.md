@@ -105,7 +105,12 @@ protected Object[] getMethodArgumentValues(NativeWebRequest request, @Nullable M
 				throw new IllegalStateException(formatArgumentError(parameter, "No suitable resolver")); // 만들어낼 수 없다면 예외를 던진다
 			}
 			try {
-				args[i] = this.resolvers.resolveArgument(parameter, mavContainer, request, this.dataBinderFactory); // 실제로 컨트롤러에 전달될 매개변수를 만들어내는 부분
+                // 실제로 컨트롤러에 전달될 매개변수를 만들어내는 부분으로 내부 구현은 커맨드 패턴으로 이루어져있다.
+                // resolveArgument()는 HandlerMethodArgumentResolverComposite.getArgumentResolver()를 호출한다
+                // getArgumentResolver()는 ArgumentResolver가 들어있는 List를 순회하며 resolver.supportsParameter()를 호출한다
+                // 해당 매개변수를 생성 할 수 있는 ArgumentResolver를 찾아 반환한다. 없다면 null을 반환한다.
+                // resolveArgument()는 반환받은 ArgumentResolver의 resolveArgument()를 호출해 데이터가 바인딩 된 매개변수 인스턴스를 생성하고 반환한다.
+				args[i] = this.resolvers.resolveArgument(parameter, mavContainer, request, this.dataBinderFactory); 
 			}
 			catch (Exception ex) {
 				// Leave stack trace for later, exception may actually be resolved and handled...
@@ -137,6 +142,46 @@ public Object resolveArgument(MethodParameter parameter, @Nullable ModelAndViewC
                 parameter.getParameterType().getName() + "]. supportsParameter should be called first.");
         }
     return resolver.resolveArgument(parameter, mavContainer, webRequest, binderFactory); // ArgumentResolver가 존재한다면 매개변수 생성을 위임한다
+}
+```
+
+<br />
+
+```java
+// file: 'HandlerMethodArgumentResolverComposite.class'
+public class HandlerMethodArgumentResolverComposite implements HandlerMethodArgumentResolver { 
+    
+    ...
+
+    @Override
+    @Nullable
+    public Object resolveArgument(MethodParameter parameter, @Nullable ModelAndViewContainer mavContainer,
+        NativeWebRequest webRequest, @Nullable WebDataBinderFactory binderFactory) throws Exception {
+
+        HandlerMethodArgumentResolver resolver = getArgumentResolver(parameter);
+        if (resolver == null) { // 매개변수를 생성할 수 있는 ArgumentResolver가 없다면 IllegalArgumentException를 던진다
+            throw new IllegalArgumentException("Unsupported parameter type [" +
+                parameter.getParameterType().getName() + "]. supportsParameter should be called first.");
+        }
+        return resolver.resolveArgument(parameter, mavContainer, webRequest, binderFactory);
+    }
+
+    @Nullable
+    private HandlerMethodArgumentResolver getArgumentResolver(MethodParameter parameter) {
+        HandlerMethodArgumentResolver result = this.argumentResolverCache.get(parameter);
+        if (result == null) {
+            for (HandlerMethodArgumentResolver resolver : this.argumentResolvers) {
+                // ArgumentResolver 가 들어있는 List를 순회하며 매개변수를 생성할 수 있는 ArgumentResolver 를 찾는다
+                if (resolver.supportsParameter(parameter)) { 
+                    result = resolver;
+                    this.argumentResolverCache.put(parameter, result);
+                    break;
+                }
+            }
+        }
+        return result;
+    }
+
 }
 ```
 
@@ -254,9 +299,10 @@ public final Object resolveArgument(MethodParameter parameter, @Nullable ModelAn
 
 ---
 
-- 코드상으로 보기에 `@ModelAttribute`가 하는 일이 `ModelAndView`에 데이터를 바인딩해주는 것이 주 목적으로 보이는데 약간 혼선이 온다.
+- 코드상으로 보기에 `@ModelAttribute`가 하는 일이 `ModelAndView`를 설정하는 것이 주 목적으로 보이는데 이 부분에서 약간 혼선이 온다.
     - 실제로 `@ModelAttribute`가 없어도 `QueryString`으로 넘어오는 데이터들은 바인딩이 아주 잘 된다.
-    - 그렇다면 만약 `SSR` 방식이 아니고 `CSR` 방식이라 `@RestController`를 사용한다면 `@ModelAttribute`를 생략하는 것이 조금 더 효율적일까?
+    - 결국 `@ModelAttribute`가 있고 없고의 차이는 `mavContainer(ModelAndViewContainer)`를 어떻게 처리하는가이다.
+    - 그렇다면 만약 `SSR` 방식이 아니고 `CSR` 방식이라 `@RestController`를 사용한다면 `@ModelAttribute`를 생략하는 것이 조금 더 효율적일까? `CSR` 방식이라면 `ModelAndView`를 신경쓰지 않아도 된다.
         - 이렇게 보기엔 `RequestMappingHandlerAdapter`가 처음에는 `@ModelAttribute`가 없는 매개변수를 조회하고, 마지막에는 `@ModelAttribute`가 있는 매개변수를 다시 조회한다.
         - 따라서 어차피 `@ModelAttribute`가 있든 없든 무조건 조회되므로 효율적이라고 보기 힘들 것 같다.
         - 이런 구조로 만든 이유가 무엇일까? 지금 내 수준으로선 짐작하기 어렵다.
