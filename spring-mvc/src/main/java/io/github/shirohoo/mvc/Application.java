@@ -1,4 +1,4 @@
-package io.github.shirohoo.modelattribute;
+package io.github.shirohoo.mvc;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
