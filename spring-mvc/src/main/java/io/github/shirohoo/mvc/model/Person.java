@@ -1,4 +1,4 @@
-package io.github.shirohoo.modelattribute.model;
+package io.github.shirohoo.mvc.model;
 
 import lombok.Getter;
 import lombok.ToString;
