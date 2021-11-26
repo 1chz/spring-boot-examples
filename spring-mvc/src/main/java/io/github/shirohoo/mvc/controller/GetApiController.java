@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
 @RestController
-public class HelloApiController {
+public class GetApiController {
 
     @GetMapping("/v1/hello")
     public Person helloV1(Person person) { // Person을 HandlerMethodArgumentResolver가 만들어준다 !
