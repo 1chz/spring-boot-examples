@@ -30,6 +30,12 @@ class PostApiControllerTest {
         assertThatThrownBy(() -> performPost("v2")).isInstanceOf(NestedServletException.class);
     }
 
+    @Test
+    @DisplayName("HTTP 바디에 있는 데이터를 @RequestParam을 통해 받을 수 있다. 이 경우 Map을 사용")
+    void helloV3() throws Exception {
+        performPost("v3");
+    }
+
     private void performPost(String version) throws Exception {
         String content = "{\"name\":\"nameInHttpBody\",\"age\":11}";
         mvc.perform(post("/" + version + "/hello?name=urlName&age=50")

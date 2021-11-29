@@ -2,6 +2,7 @@ package io.github.shirohoo.mvc.controller;
 
 import io.github.shirohoo.mvc.model.Cat;
 import io.github.shirohoo.mvc.model.Person;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -25,6 +26,12 @@ public class PostApiController {
 
     @PostMapping("/v2/hello")
     public String helloV2(@RequestBody Cat cat) {
+        log.info("cat={}", cat);
+        return "ok";
+    }
+
+    @PostMapping("/v3/hello")
+    public String helloV3(@RequestParam Map<String, Object> cat) {
         log.info("cat={}", cat);
         return "ok";
     }
