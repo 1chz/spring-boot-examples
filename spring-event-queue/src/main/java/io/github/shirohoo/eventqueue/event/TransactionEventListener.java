@@ -20,11 +20,14 @@ public class TransactionEventListener {
         Transaction transaction = event.getTransaction();
         while (isCouldNotPut(event)) {
             if (!transaction.isQueueWait()) {
-                Transaction updatedTransaction = transaction.update(TransactionStatus.QUEUE_WAIT);
-                transaction = repository.update(updatedTransaction);
+                update(transaction, TransactionStatus.QUEUE_WAIT);
             }
         }
-        Transaction updatedTransaction = transaction.update(TransactionStatus.QUEUE);
+        update(transaction, TransactionStatus.QUEUE);
+    }
+
+    private void update(Transaction transaction, TransactionStatus queue) {
+        Transaction updatedTransaction = transaction.update(queue);
         repository.update(updatedTransaction);
     }
 

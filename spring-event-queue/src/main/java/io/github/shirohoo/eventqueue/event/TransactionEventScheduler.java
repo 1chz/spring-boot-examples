@@ -15,7 +15,7 @@ public class TransactionEventScheduler {
     private final TransactionEventQueue eventQueue;
     private final TransactionRepository repository;
 
-    @Scheduled(fixedDelay = 500)
+    @Scheduled(fixedDelay = 500) // 0.5s
     public void eventProcessing() {
         new Thread(new TransactionEventWorker(objectMapper, eventQueue, repository))
             .start();
