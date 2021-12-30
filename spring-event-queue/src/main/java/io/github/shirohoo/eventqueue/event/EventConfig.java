@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class EventConfig {
     @Bean
-    public TransactionEventQueue memberEventQueue(){
-        return TransactionEventQueue.of(10);
+    public TransactionEventQueue memberEventQueue() {
+        return TransactionEventQueue.of(1_000);
     }
 }
