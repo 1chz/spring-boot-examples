@@ -1,6 +1,7 @@
 spring:
   datasource:
-    url: jdbc:h2:tcp://localhost/~/test
+    url: jdbc:h2:mem:testdb
+#    url: jdbc:h2:tcp://localhost/~/test
     username: sa
     password:
   jpa:
@@ -8,4 +9,11 @@ spring:
       hibernate:
         default_batch_fetch_size: 1000
     hibernate:
-      ddl-auto: create
+      ddl-auto: create-drop
+
+logging:
+  level:
+    com.zaxxer.hikari.HikariConfig: DEBUG
+    com.zaxxer.hikari: TRACE
+  pattern:
+    console: "[%d{yyyy-MM-dd HH:mm:ss.SSS}] %highlight(%-5level) %boldMagenta(%thread) %boldCyan(%logger{15}) - %msg %n"
