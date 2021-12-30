@@ -11,8 +11,16 @@ import org.springframework.web.bind.annotation.RestController;
 public class EventController {
     private final TransactionUseCase useCase;
 
-    @GetMapping
-    public void onEvent() {
-        useCase.save(Transaction.create());
+    @GetMapping("/transaction")
+    public String transaction() {
+        Transaction transaction = useCase.save(Transaction.create());
+        return "Request complete! id: " + transaction.getId() + " status: " + transaction.getStatus();
+    }
+
+    @GetMapping("/transactions")
+    public void transactions() {
+        for (int i = 0; i < 50; i++) {
+            useCase.save(Transaction.create());
+        }
     }
 }
