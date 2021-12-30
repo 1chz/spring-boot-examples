@@ -33,7 +33,7 @@ dependencies {
 
 ```java
 @Configuration
-@EnableFeignClients(basePackages = "io.github.shirohoo.openfeign.client") // OpenFeignClient를 활성화
+@EnableFeignClients(basePackages = "io.github.shirohoo.openfeign.client") // OpenFeignClient를 활성화. 별도의 설정클래스에 추가했으므로 콤포넌트 스캔을 위해 베이스패키지를 지정
 public class OpenFeignConfig {
 
     @Bean
@@ -47,6 +47,45 @@ public class OpenFeignConfig {
     }
 
 }
+```
+
+<br />
+
+`Level.FULL` 설정 시 `OpenFeign`이 제공하는 기본 로거 구현체를 사용하기 위해서는 로깅 레벨을 `DEBUG`까지 허용해줘야 한다.
+
+<br />
+
+```yaml
+# application.yaml
+logging:
+  level:
+    # 이렇게 FeignClient가 위치한 패키지별로 로깅 레벨을 설정할수도 있다
+    io.github.shirohoo.openfeign.client: DEBUG
+```
+
+<br />
+
+`OpenFeign`이 제공하는 기본 로거 구현체가 찍어주는 로그의 예시는 하기와 같다.
+
+<br />
+
+```shell
+i.g.s.c.FeignClient - [FeignClient#method] ---> GET https://jsonplaceholder.typicode.com/todos HTTP/1.1
+i.g.s.c.FeignClient - [FeignClient#method] Content-Length: 277
+i.g.s.c.FeignClient - [FeignClient#method] Content-Type: application/json
+i.g.s.c.FeignClient - [FeignClient#method]
+i.g.s.c.FeignClient - [FeignClient#method] {}
+i.g.s.c.FeignClient - [FeignClient#method] ---> END HTTP (277-byte body)
+i.g.s.c.FeignClient - [FeignClient#method] <--- HTTP/1.1 200 200 (737ms)
+i.g.s.c.FeignClient - [FeignClient#method] connection: Keep-Alive
+i.g.s.c.FeignClient - [FeignClient#method] content-type: application/json;charset=UTF-8
+i.g.s.c.FeignClient - [FeignClient#method] date: Fri, 12 Nov 2021 03:51:08 GMT
+i.g.s.c.FeignClient - [FeignClient#method] keep-alive: timeout=5, max=100
+i.g.s.c.FeignClient - [FeignClient#method] server: Apache
+i.g.s.c.FeignClient - [FeignClient#method] transfer-encoding: chunked
+i.g.s.c.FeignClient - [FeignClient#method]
+i.g.s.c.FeignClient - [FeignClient#method] {"data":"data"}
+i.g.s.c.FeignClient - [FeignClient#method] <--- END HTTP (310-byte body)
 ```
 
 <br />
@@ -66,6 +105,8 @@ public class OpenFeignConfig {
 )
 public interface JsonPlaceHolderClient { // JPA Repository와 마찬가지로 인터페이스로 생성한다
 
+    // Spring Controller와 같은 패턴을 사용한다.
+    // Get방식으로 ${feign.client.url.jsonPlaceHolder}/posts에 요청을 보내고 List<Post> 로 응답을 받는다.
     @GetMapping("/posts")
     List<Post> getPosts();
 
@@ -89,6 +130,24 @@ public interface JsonPlaceHolderClient { // JPA Repository와 마찬가지로 �
 
 <br />
 
+`Post`나 `Put`처럼 요청 파라미터가 있는 경우 메서드 파라미터에 추가한다.
+
+`@PathVariable`, `@ReuqestHeader`, `@RequestBody` 등 Spring MVC에서 사용하던 모든 애노테이션을 사용할 수 있다.
+
+**(주의) 여기서 Spring MVC와 다르게 `@PathVariable`의 경우 시그니처가 일치해도 절대로 코드를 생략할수는 없다.**
+
+<br />
+
+```java
+@PostMapping("/users/{id}")
+void getUsers(@PathVariable Long id); // OpenFeign에서는 불가능
+
+@PostMapping("/users/{id}")
+void getUsers(@PathVariable("id") Long id); // OpenFeign에서는 이렇게 사용해야만 
+```
+
+<br />
+
 ## 예외 핸들링
 
 ---
@@ -96,6 +155,10 @@ public interface JsonPlaceHolderClient { // JPA Repository와 마찬가지로 �
 별도의 에러 핸들링이 필요하다면 `ErrorDecoder` 를 구현한다.
 
 이후 Client 클래스에 구현한 디코더를 탑재하면 된다.
+
+만약 별도의 디코더를 탑재하지 않을 경우 `OpenFeign`이 제공하는 기본 디코더가 동작한다.
+
+<br />
 
 ```java
 // FeignClient 가 API 호출 중 발생하는 에러를 처리할 클래스
