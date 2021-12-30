@@ -43,7 +43,11 @@ public class TransactionEventQueue {
     }
 
     public void healthCheck() {
-        log.info("{\"totalQueueSize\": " + queueSize + ", \"currentQueueSize\": " + size() + "\"}");
+        log.info("{\"totalQueueSize\": " + queueSize + ", \"currentQueueSize\": " + size() + "}");
+    }
+
+    public void healthCheck(TransactionEvent event, TransactionStatus status) {
+        log.info(getMessage(event, status));
     }
 
     private String getMessage(TransactionEvent event, TransactionStatus status) {
