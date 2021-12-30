@@ -20,25 +20,29 @@ public class TransactionEventWorker implements Runnable {
         if (eventQueue.size() > 0) {
             TransactionEvent event = eventQueue.poll();
             Transaction transaction = update(event.getTransaction(), TransactionStatus.PROGRESS);
-
-            info(transaction);
-            try {
-                Thread.sleep(1_000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-
-            if (Math.random() < 0.5) {
-                transaction = update(transaction, TransactionStatus.SUCCESS);
-                info(transaction);
-            } else {
-                transaction = update(transaction, TransactionStatus.FAILURE);
-                info(transaction);
-            }
-        } else {
-            log.info("Transaction event not found!");
-            eventQueue.healthCheck();
+            processing(1_000, transaction);
+            successOrFailure(transaction);
+            return;
         }
+        eventQueue.healthCheck();
+    }
+
+    private void processing(int processingTimeInMs, Transaction transaction) {
+        info(transaction);
+        try {
+            Thread.sleep(processingTimeInMs);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void successOrFailure(Transaction transaction) {
+        if (Math.random() < 0.5) {
+            transaction = update(transaction, TransactionStatus.SUCCESS);
+        } else {
+            transaction = update(transaction, TransactionStatus.FAILURE);
+        }
+        info(transaction);
     }
 
     private Transaction update(Transaction transaction, TransactionStatus status) {
@@ -50,7 +54,7 @@ public class TransactionEventWorker implements Runnable {
         try {
             log.info(objectMapper.writeValueAsString(transaction));
         } catch (JsonProcessingException e) {
-            e.printStackTrace();
+            // doSomething...
         }
     }
 }
