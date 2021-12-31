@@ -15,9 +15,10 @@ public class TransactionUseCase {
     private final EventPublisher publisher;
     private final TransactionRepository repository;
 
-    public void save(Transaction transaction) {
+    public Transaction save(Transaction transaction) {
         transaction = repository.save(transaction);
         log.info("Create new transaction! {}", transaction);
         publisher.publish(TransactionEvent.occurs(transaction));
+        return transaction;
     }
 }

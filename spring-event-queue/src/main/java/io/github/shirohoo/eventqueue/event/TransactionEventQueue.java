@@ -1,7 +1,8 @@
 package io.github.shirohoo.eventqueue.event;
 
-import io.github.shirohoo.eventqueue.domain.TransactionStatus;
+import io.github.shirohoo.eventqueue.domain.Transaction.TransactionStatus;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import lombok.extern.slf4j.Slf4j;
 
@@ -43,7 +44,11 @@ public class TransactionEventQueue {
     }
 
     public void healthCheck() {
-        log.info("{\"totalQueueSize\": " + queueSize + ", \"currentQueueSize\": " + size() + "\"}");
+        log.info("{\"totalQueueSize\": " + queueSize + ", \"currentQueueSize\": " + size() + "}");
+    }
+
+    public void healthCheck(TransactionEvent event, TransactionStatus status) {
+        log.info(getMessage(event, status));
     }
 
     private String getMessage(TransactionEvent event, TransactionStatus status) {
