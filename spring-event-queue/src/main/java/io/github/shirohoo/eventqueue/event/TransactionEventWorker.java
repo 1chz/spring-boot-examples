@@ -18,12 +18,17 @@ public class TransactionEventWorker implements Runnable {
     public void run() {
         if (eventQueue.size() > 0) {
             TransactionEvent event = eventQueue.poll();
-            Transaction transaction = update(event.getTransaction(), TransactionStatus.PROGRESS);
-            eventQueue.healthCheck(event, transaction.getStatus());
-            processing(1_000);
-            transaction = successOrFailure(transaction);
-            eventQueue.healthCheck(event, transaction.getStatus());
-            return;
+            try {
+                Transaction transaction = update(event.getTransaction(), TransactionStatus.PROGRESS);
+                eventQueue.healthCheck(event, transaction.getStatus());
+                processing(1_000);
+                transaction = successOrFailure(transaction);
+                eventQueue.healthCheck(event, transaction.getStatus());
+                return;
+            } catch (Exception e) {
+                update(event.getTransaction(), TransactionStatus.FAILURE);
+                return;
+            }
         }
         eventQueue.healthCheck();
     }
