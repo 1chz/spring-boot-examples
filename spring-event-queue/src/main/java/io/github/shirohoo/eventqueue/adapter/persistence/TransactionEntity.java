@@ -1,7 +1,7 @@
 package io.github.shirohoo.eventqueue.adapter.persistence;
 
 import io.github.shirohoo.eventqueue.domain.Transaction;
-import io.github.shirohoo.eventqueue.domain.TransactionStatus;
+import io.github.shirohoo.eventqueue.domain.Transaction.TransactionStatus;
 import java.io.Serializable;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -36,7 +36,7 @@ public class TransactionEntity implements Serializable {
         return Transaction.of(id, status);
     }
 
-    public TransactionEntity update(Transaction transaction){
+    public TransactionEntity update(Transaction transaction) {
         this.status = transaction.getStatus();
         return this;
     }

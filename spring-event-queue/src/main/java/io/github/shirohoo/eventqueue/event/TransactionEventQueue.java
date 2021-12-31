@@ -1,7 +1,8 @@
 package io.github.shirohoo.eventqueue.event;
 
-import io.github.shirohoo.eventqueue.domain.TransactionStatus;
+import io.github.shirohoo.eventqueue.domain.Transaction.TransactionStatus;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import lombok.extern.slf4j.Slf4j;
 

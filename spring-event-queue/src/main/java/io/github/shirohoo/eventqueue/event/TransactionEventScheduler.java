@@ -1,6 +1,5 @@
 package io.github.shirohoo.eventqueue.event;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.shirohoo.eventqueue.adapter.persistence.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Async;
@@ -10,13 +9,13 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class TransactionEventScheduler {
-    private final ObjectMapper objectMapper;
     private final TransactionEventQueue eventQueue;
     private final TransactionRepository repository;
 
     @Async("taskScheduler")
     @Scheduled(fixedRate = 100)
     public void schedule() {
-        new TransactionEventWorker(objectMapper, eventQueue, repository).run();
+        new TransactionEventWorker(eventQueue, repository)
+            .run();
     }
 }

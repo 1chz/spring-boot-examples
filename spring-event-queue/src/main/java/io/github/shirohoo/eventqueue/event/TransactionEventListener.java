@@ -2,7 +2,7 @@ package io.github.shirohoo.eventqueue.event;
 
 import io.github.shirohoo.eventqueue.adapter.persistence.TransactionRepository;
 import io.github.shirohoo.eventqueue.domain.Transaction;
-import io.github.shirohoo.eventqueue.domain.TransactionStatus;
+import io.github.shirohoo.eventqueue.domain.Transaction.TransactionStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;

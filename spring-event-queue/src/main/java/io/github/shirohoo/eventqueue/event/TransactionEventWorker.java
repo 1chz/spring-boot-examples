@@ -1,9 +1,8 @@
 package io.github.shirohoo.eventqueue.event;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.shirohoo.eventqueue.adapter.persistence.TransactionRepository;
 import io.github.shirohoo.eventqueue.domain.Transaction;
-import io.github.shirohoo.eventqueue.domain.TransactionStatus;
+import io.github.shirohoo.eventqueue.domain.Transaction.TransactionStatus;
 import javax.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,7 +10,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RequiredArgsConstructor
 public class TransactionEventWorker implements Runnable {
-    private final ObjectMapper objectMapper;
     private final TransactionEventQueue eventQueue;
     private final TransactionRepository repository;
 
