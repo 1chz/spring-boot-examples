@@ -34,7 +34,7 @@ spring:
 
 <br />
 
-![image](https://drive.google.com/uc?export=view&id=1x8D74zZjGCf334TUw8ulEhFxSE-Qv5m-)
+![queue_console](https://user-images.githubusercontent.com/71188307/147808230-bea4644f-1262-431c-b29a-cf87f865026e.gif)
 
 <br />
 
