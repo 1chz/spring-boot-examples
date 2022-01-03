@@ -16,21 +16,17 @@ public class TransactionEventWorker implements Runnable {
     @Override
     @Transactional
     public void run() {
-        if (eventQueue.size() > 0) {
-            TransactionEvent event = eventQueue.poll();
+        if (eventQueue.isRemaining()) {
+            Transaction transaction = eventQueue.poll();
             try {
-                Transaction transaction = update(event.getTransaction(), TransactionStatus.PROGRESS);
-                eventQueue.healthCheck(event, transaction.getStatus());
+                transaction = updateStatus(transaction, TransactionStatus.PROGRESS);
                 processing(1_000);
-                transaction = successOrFailure(transaction);
-                eventQueue.healthCheck(event, transaction.getStatus());
-                return;
+                successOrFailure(transaction);
             } catch (Exception e) {
-                update(event.getTransaction(), TransactionStatus.FAILURE);
-                return;
+                handlingInCaseOfFailure(transaction);
+                log.error(e.getMessage());
             }
         }
-        eventQueue.healthCheck();
     }
 
     private void processing(int processingTimeInMs) {
@@ -41,16 +37,22 @@ public class TransactionEventWorker implements Runnable {
         }
     }
 
-    private Transaction successOrFailure(Transaction transaction) {
+    private void successOrFailure(Transaction transaction) {
         if (Math.random() < 0.5) {
-            return update(transaction, TransactionStatus.SUCCESS);
+            updateStatus(transaction, TransactionStatus.SUCCESS);
         } else {
-            return update(transaction, TransactionStatus.FAILURE);
+            updateStatus(transaction, TransactionStatus.FAILURE);
         }
     }
 
-    private Transaction update(Transaction transaction, TransactionStatus status) {
+    private void handlingInCaseOfFailure(Transaction transaction) {
+        updateStatus(transaction, TransactionStatus.FAILURE);
+    }
+
+    private Transaction updateStatus(Transaction transaction, TransactionStatus status) {
+        TransactionStatus beforeStatus = transaction.getStatus();
         Transaction updatedTransaction = transaction.update(status);
+        log.info("{\"transactionId\": {},\"before\":\"{}\", \"after\":\"{}\"}", transaction.getId(), beforeStatus, status);
         return repository.update(updatedTransaction);
     }
 }

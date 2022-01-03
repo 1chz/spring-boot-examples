@@ -1,5 +1,6 @@
 package io.github.shirohoo.eventqueue.event;
 
+import io.github.shirohoo.eventqueue.domain.Transaction;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
@@ -9,7 +10,7 @@ import org.springframework.stereotype.Component;
 public class EventPublisher {
     private final ApplicationEventPublisher publisher;
 
-    public void publish(TransactionEvent event) {
-        publisher.publishEvent(event);
+    public void publish(Transaction transaction) {
+        publisher.publishEvent(transaction);
     }
 }

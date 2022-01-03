@@ -1,13 +1,14 @@
 package io.github.shirohoo.eventqueue.adapter.persistence;
 
 import io.github.shirohoo.eventqueue.domain.Transaction;
-import javax.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 @Repository
 @RequiredArgsConstructor
-public class TransactionRepositoryImpl implements TransactionRepository {
+@Transactional(readOnly = true)
+public class TransactionRdbmsRepository implements TransactionRepository {
     private final TransactionJpaRepository repository;
 
     @Override

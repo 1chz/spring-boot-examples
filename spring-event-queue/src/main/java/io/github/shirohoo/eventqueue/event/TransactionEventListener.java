@@ -6,7 +6,6 @@ import io.github.shirohoo.eventqueue.domain.Transaction.TransactionStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -17,23 +16,25 @@ public class TransactionEventListener {
     private final TransactionRepository repository;
 
     @EventListener
-    @Async("threadPoolTaskExecutor")
-    public void onEvent(TransactionEvent event) {
-        Transaction transaction = event.getTransaction();
-        while (isEventQueueFull(event)) {
+    public void onEvent(Transaction transaction) {
+        if (!transaction.isStandBy()) {
+            log.info("Transaction(id:{}) status is not STANDBY!", transaction.getId());
+            return;
+        }
+
+        while (eventQueue.isFull()) {
             if (!transaction.isQueueWait()) {
-                update(transaction, TransactionStatus.QUEUE_WAIT);
+                transaction = updateStatus(transaction, TransactionStatus.QUEUE_WAIT);
             }
         }
-        update(transaction, TransactionStatus.QUEUE);
+        transaction = updateStatus(transaction, TransactionStatus.QUEUE);
+        eventQueue.offer(transaction);
     }
 
-    private boolean isEventQueueFull(TransactionEvent event) {
-        return !eventQueue.offer(event);
-    }
-
-    private void update(Transaction transaction, TransactionStatus queue) {
-        Transaction updatedTransaction = transaction.update(queue);
-        repository.update(updatedTransaction);
+    private Transaction updateStatus(Transaction transaction, TransactionStatus status) {
+        TransactionStatus beforeStatus = transaction.getStatus();
+        Transaction updatedTransaction = transaction.update(status);
+        log.info("{\"transactionId\": {},\"before\":\"{}\", \"after\":\"{}\"}", transaction.getId(), beforeStatus, status);
+        return repository.update(updatedTransaction);
     }
 }

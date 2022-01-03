@@ -1,61 +1,53 @@
 package io.github.shirohoo.eventqueue.event;
 
-import io.github.shirohoo.eventqueue.domain.Transaction.TransactionStatus;
+import io.github.shirohoo.eventqueue.domain.Transaction;
 import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class TransactionEventQueue {
-    private final Queue<TransactionEvent> queue;
+    private final Queue<Transaction> queue;
     private final int queueSize;
 
     private TransactionEventQueue(int size) {
         this.queueSize = size;
-        this.queue = new LinkedBlockingQueue<>(size);
+        this.queue = new LinkedBlockingQueue<>(queueSize);
     }
 
     public static TransactionEventQueue of(int size) {
         return new TransactionEventQueue(size);
     }
 
-    public boolean offer(TransactionEvent event) {
-        if (queue.offer(event)) {
-            log.info(getMessage(event, TransactionStatus.QUEUE));
-            return true;
-        }
-        log.info(getMessage(event, TransactionStatus.QUEUE_WAIT));
-        return false;
-    }
-
-
-    public TransactionEvent poll() {
-        if (queue.size() == 0) {
-            throw new IllegalStateException("No events in the queue !");
-        }
-        TransactionEvent returnValue = queue.poll();
-        log.info(getMessage(returnValue, TransactionStatus.PROGRESS));
+    public boolean offer(Transaction transaction) {
+        boolean returnValue = queue.offer(transaction);
+        healthCheck();
         return returnValue;
     }
 
-    public int size() {
+
+    public Transaction poll() {
+        if (queue.size() <= 0) {
+            throw new IllegalStateException("No events in the queue !");
+        }
+        Transaction transaction = queue.poll();
+        healthCheck();
+        return transaction;
+    }
+
+    private int size() {
         return queue.size();
     }
 
-    public void healthCheck() {
-        log.info("{\"totalQueueSize\": " + queueSize + ", \"currentQueueSize\": " + size() + "}");
+    public boolean isFull() {
+        return size() == queueSize;
     }
 
-    public void healthCheck(TransactionEvent event, TransactionStatus status) {
-        log.info(getMessage(event, status));
+    public boolean isRemaining() {
+        return size() > 0;
     }
 
-    private String getMessage(TransactionEvent event, TransactionStatus status) {
-        return "{\"totalQueueSize\": " + queueSize +
-            ", \"currentQueueSize\": " + size() +
-            ", \"transactionId\": " + event.getTransaction().getId() +
-            ", \"state\": \"" + status +
-            "\"}";
+    private void healthCheck() {
+        log.info("{\"totalQueueSize\":{}, \"currentQueueSize\":{}}", queueSize, size());
     }
 }
