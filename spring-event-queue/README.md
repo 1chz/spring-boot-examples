@@ -10,14 +10,16 @@
 
 서버모드를 사용하겠다면 본인이 사용하고있는 머신에 H2 서버모드 설정을 하고 하기의 주석을 변경하라.
 
+애플리케이션이 종료될때 백그라운드 처리가 끝나기 전에 데이터베이스 커넥션이 먼저 닫히지 않도록 `;DB_CLOSE_ON_EXIT=FALSE` 옵션을 추가해주었다.
+
 <br />
 
 ```yaml
 #application.yaml
 spring:
   datasource:
-    url: jdbc:h2:mem:testdb
-#   url: jdbc:h2:tcp://localhost/~/test
+    url: jdbc:h2:mem:testdb;DB_CLOSE_ON_EXIT=FALSE
+    # url: jdbc:h2:tcp://localhost/~/test;DB_CLOSE_ON_EXIT=FALSE
     username: sa
     password:
 ```
@@ -89,15 +91,71 @@ spring:
 
 <br />
 
-### ThreadPoolTaskScheduler
+### ThreadPoolConfig
 
 ---
 
 스케쥴링을 처리할때 사용할 스레드풀이다.
 
+`ThreadPoolTaskScheduler`를 사용할것이고, 주로 더 범용적으로 사용되는 `ThreadPoolTaskExecutor`에 대한 설정도 추가해보았다. (이 코드에서 사용하진 않는다)
+
 <br />
 
-![image](https://user-images.githubusercontent.com/71188307/147806290-f0e1d576-0177-44cd-b556-d7f093a854d7.png)
+```java
+@EnableAsync
+@Configuration
+@EnableScheduling
+public class ThreadPoolConfig {
+    @Bean
+    public ThreadPoolTaskScheduler taskScheduler() {
+        ThreadPoolTaskScheduler taskScheduler = new ThreadPoolTaskScheduler();
+
+        // 스케쥴러 스레드풀의 사이즈. 여기서는 머신의 프로세서 수로 하였다.
+        taskScheduler.setPoolSize(Runtime.getRuntime().availableProcessors());
+
+        // 로그에 찍힐 스케쥴러 스레드의 접두사
+        taskScheduler.setThreadNamePrefix("Scheduler-Thread-");
+
+        // 모든 설정을 적용하고 ThreadPoolTaskScheduler를 초기화
+        taskScheduler.initialize();
+
+        return taskScheduler;
+    }
+
+    @Bean
+    public ThreadPoolTaskExecutor threadPoolTaskExecutor() {
+        ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
+
+        // 로그에 찍힐 스레드의 접두사
+        taskExecutor.setThreadNamePrefix("Async-Thread-");
+
+        // 기본적으로 유지할 스레드풀의 사이즈. 설정값은 머신의 프로세서 수로 하였다.
+        taskExecutor.setCorePoolSize(Runtime.getRuntime().availableProcessors());
+
+        // 최대 스레드풀 사이즈
+        taskExecutor.setMaxPoolSize(200);
+
+        // 최대 스레드풀 사이즈만큼 스레드가 생성되면 생성을 대기시킬 스레드의 수
+        taskExecutor.setQueueCapacity(1_000);
+
+        // MaxPoolSize와 QueueCapacity이상으로 스레드가 생성되야 할 경우의 정책
+        // CallerRunsPolicy는 스레드를 생성하고 처리를 위임하려고 한 스레드가 직접 모든 처리를 다하도록 하는 정책
+        taskExecutor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+
+        // 어플리케이션 종료시 동작중이던 스레드가 모든 처리를 완료할때까지 대기한 후 종료한다
+        taskExecutor.setWaitForTasksToCompleteOnShutdown(true);
+
+        // CorePool 스레드의 유휴시간(기본 60s)이 지나면 kill할지 여부.
+        // 기본값은 false이며, true로 설정하면 스레드를 kill한다.
+        taskExecutor.setAllowCoreThreadTimeOut(true);
+
+        // 모든 설정을 적용하고 ThreadPoolTaskExecutor를 초기화
+        taskExecutor.initialize();
+
+        return taskExecutor;
+    }
+}
+```
 
 <br />
 
@@ -115,27 +173,67 @@ spring:
 
 <br />
 
-![image](https://user-images.githubusercontent.com/71188307/147805700-2dead34b-7eba-4a7e-997d-6b2a2baeb7cc.png)
+```java
+/**
+ * 결제거래를 표현하는 클래스.
+ */
+@Value(staticConstructor = "of")
+public class Transaction {
+    Long id;
+    TransactionStatus status;
+
+    /**
+     * 새로운 결제거래가 생성되어야 할 경우 호출해야 하는 정적 팩토리 메서드.
+     * @return STANDBY 상태의 인스턴스를 반환
+     */
+    public static Transaction create() {
+        return Transaction.of(null, TransactionStatus.STANDBY);
+    }
+
+    /**
+     * 객체의 상태가 업데이트되야 할 경우 새로운 객체를 생성하여 반환한다
+     * @param status 업데이트되어야 할 상태
+     * @return 상태가 업데이트된 새로운 인스턴스
+     */
+    public Transaction update(TransactionStatus status) {
+        return Transaction.of(id, status);
+    }
+
+    /**
+     * 객체의 상태가 STANDBY 인지?
+     * @return STANDBY라면 true를 반환
+     */
+    public boolean isStandBy(){
+        return status == TransactionStatus.STANDBY;
+    }
+
+    /**
+     * 객체의 상태가 QUEUE_WAIT 인지?
+     * @return QUEUE_WAIT이라면 true를 반환
+     */
+    public boolean isQueueWait() {
+        return status == TransactionStatus.QUEUE_WAIT;
+    }
+
+    /**
+     * 결제 거래의 상태를 나타내는 enum 클래스
+     */
+    public enum TransactionStatus {
+        STANDBY,
+        QUEUE_WAIT,
+        QUEUE,
+        PROGRESS,
+        SUCCESS,
+        FAILURE
+    }
+}
+```
 
 <br />
 
 ## 이벤트
 
 ---
-
-### TransactionEvent
-
----
-
-유효한 결제거래 객체가 생성되면 생성될 이벤트 객체다.
-
-딱히 없어도 되긴 하지만 간접참조 계층을 만들어두는게 좋을 것 같아 추가했다.
-
-<br />
-
-![image](https://user-images.githubusercontent.com/71188307/147805774-25ef4174-6af6-4e93-981e-077d6fa4ada8.png)
-
-<br />
 
 ### TransactionEventQueue
 
@@ -161,17 +259,60 @@ API는 심플하다.
 
 <br />
 
-![image](https://user-images.githubusercontent.com/71188307/147806354-5cf38c17-7052-4413-9b70-34d9d2af73ed.png)
+```java
+@Slf4j
+public class TransactionEventQueue {
+    private final Queue<Transaction> queue;
+    private final int queueSize;
+
+    private TransactionEventQueue(int size) {
+        this.queueSize = size;
+        this.queue = new LinkedBlockingQueue<>(queueSize);
+    }
+
+    public static TransactionEventQueue of(int size) {
+        return new TransactionEventQueue(size);
+    }
+
+    public boolean offer(Transaction transaction) {
+        boolean returnValue = queue.offer(transaction);
+        healthCheck();
+        return returnValue;
+    }
+
+
+    public Transaction poll() {
+        if (queue.size() <= 0) {
+            throw new IllegalStateException("No events in the queue !");
+        }
+        Transaction transaction = queue.poll();
+        healthCheck();
+        return transaction;
+    }
+
+    private int size() {
+        return queue.size();
+    }
+
+    public boolean isFull() {
+        return size() == queueSize;
+    }
+
+    public boolean isRemaining() {
+        return size() > 0;
+    }
+
+    private void healthCheck() {
+        log.info("{\"totalQueueSize\":{}, \"currentQueueSize\":{}}", queueSize, size());
+    }
+}
+```
 
 <br />
 
 그리고 이벤트 큐를 초기화하여 Bean으로 등록한다.
 
 이때 큐의 사이즈는 `1,000`으로 설정하였다.
-
-<br />
-
-![image](https://user-images.githubusercontent.com/71188307/147806712-63973e0c-de43-4f30-8898-8c4a2622d93f.png)
 
 <br />
 
@@ -183,7 +324,17 @@ API는 심플하다.
 
 <br />
 
-![image](https://user-images.githubusercontent.com/71188307/147805834-14e011d6-256a-41e6-b9ac-8b266bc063c3.png)
+```java
+@Component
+@RequiredArgsConstructor
+public class EventPublisher {
+    private final ApplicationEventPublisher publisher;
+
+    public void publish(Transaction transaction) {
+        publisher.publishEvent(transaction);
+    }
+}
+```
 
 <br />
 
@@ -204,7 +355,38 @@ API는 심플하다.
 
 <br />
 
-![image](https://user-images.githubusercontent.com/71188307/147806553-53920532-4824-4af1-9c4a-238ff922a4e5.png)
+```java
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class TransactionEventListener {
+    private final TransactionEventQueue eventQueue;
+    private final TransactionRepository repository;
+
+    @EventListener
+    public void onEvent(Transaction transaction) {
+        if (!transaction.isStandBy()) {
+            log.info("Transaction(id:{}) status is not STANDBY!", transaction.getId());
+            return;
+        }
+
+        while (eventQueue.isFull()) {
+            if (!transaction.isQueueWait()) {
+                transaction = updateStatus(transaction, TransactionStatus.QUEUE_WAIT);
+            }
+        }
+        transaction = updateStatus(transaction, TransactionStatus.QUEUE);
+        eventQueue.offer(transaction);
+    }
+
+    private Transaction updateStatus(Transaction transaction, TransactionStatus status) {
+        TransactionStatus beforeStatus = transaction.getStatus();
+        Transaction updatedTransaction = transaction.update(status);
+        log.info("{\"transactionId\": {},\"before\":\"{}\", \"after\":\"{}\"}", transaction.getId(), beforeStatus, status);
+        return repository.update(updatedTransaction);
+    }
+}
+```
 
 <br />
 
@@ -218,7 +400,21 @@ API는 심플하다.
 
 <br />
 
-![image](https://user-images.githubusercontent.com/71188307/147806822-b0c1bc8a-c97f-4a43-94ac-1c0be743aa1d.png)
+```java
+@Component
+@RequiredArgsConstructor
+public class TransactionEventScheduler {
+    private final TransactionEventQueue eventQueue;
+    private final TransactionRepository repository;
+
+    @Async("taskScheduler")
+    @Scheduled(fixedRate = 100)
+    public void schedule() {
+        new TransactionEventWorker(eventQueue, repository)
+            .run();
+    }
+}
+```
 
 <br />
 
@@ -252,7 +448,58 @@ API는 심플하다.
 
 <br />
 
-![image](https://user-images.githubusercontent.com/71188307/147808802-4c92abab-a800-46c9-a1d4-bc1c53057621.png)
+```java
+@Slf4j
+@RequiredArgsConstructor
+public class TransactionEventWorker implements Runnable {
+    private final TransactionEventQueue eventQueue;
+    private final TransactionRepository repository;
+
+    @Override
+    @Transactional
+    public void run() {
+        if (eventQueue.isRemaining()) {
+            Transaction transaction = eventQueue.poll();
+            try {
+                transaction = updateStatus(transaction, TransactionStatus.PROGRESS);
+                processing(1_000);
+                successOrFailure(transaction);
+            } catch (Exception e) {
+                handlingInCaseOfFailure(transaction);
+                log.error(e.getMessage());
+            }
+        }
+    }
+
+    private void processing(int processingTimeInMs) {
+        try {
+            Thread.sleep(processingTimeInMs);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void successOrFailure(Transaction transaction) {
+        if (Math.random() < 0.5) {
+            updateStatus(transaction, TransactionStatus.SUCCESS);
+        } else {
+            updateStatus(transaction, TransactionStatus.FAILURE);
+        }
+    }
+
+    private void handlingInCaseOfFailure(Transaction transaction) {
+        updateStatus(transaction, TransactionStatus.FAILURE);
+    }
+
+    private Transaction updateStatus(Transaction transaction, TransactionStatus status) {
+        TransactionStatus beforeStatus = transaction.getStatus();
+        Transaction updatedTransaction = transaction.update(status);
+        log.info("{\"transactionId\": {},\"before\":\"{}\", \"after\":\"{}\"}", transaction.getId(), beforeStatus, status);
+        return repository.update(updatedTransaction);
+    }
+}
+
+```
 
 <br />
 
