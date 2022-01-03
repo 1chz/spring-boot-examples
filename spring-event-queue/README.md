@@ -79,18 +79,6 @@ spring:
 
 ---
 
-### ThreadPoolTaskExecutor
-
----
-
-일반적인 작업을 처리할 때 사용할 스레드풀이다.
-
-<br />
-
-![image](https://user-images.githubusercontent.com/71188307/147806206-5f3386ec-f93b-4cac-ab40-baec9a29c358.png)
-
-<br />
-
 ### ThreadPoolConfig
 
 ---
