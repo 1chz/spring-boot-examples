@@ -1,9 +1,9 @@
-package io.github.shirohoo.reactive.domain;
+package io.github.shirohoo.reactive.v1;
 
 import lombok.Value;
 
 @Value
-public class Dish {
+class Dish {
     String name;
     boolean delivered;
 

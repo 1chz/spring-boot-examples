@@ -1,4 +1,4 @@
-package io.github.shirohoo.reactive.domain;
+package io.github.shirohoo.reactive.v1;
 
 import java.time.Duration;
 import java.util.Arrays;
@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
 @Service
-public class Restaurant {
+class Restaurant {
     private final Random picker;
     private final List<Dish> menu;
 

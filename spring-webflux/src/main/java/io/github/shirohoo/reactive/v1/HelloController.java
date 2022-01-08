@@ -1,7 +1,5 @@
-package io.github.shirohoo.reactive.api;
+package io.github.shirohoo.reactive.v1;
 
-import io.github.shirohoo.reactive.domain.Dish;
-import io.github.shirohoo.reactive.domain.Restaurant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -10,7 +8,7 @@ import reactor.core.publisher.Flux;
 
 @RestController
 @RequiredArgsConstructor
-public class HelloController {
+class HelloController {
     private final Restaurant restaurant;
 
     @GetMapping(path = "/foods", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
