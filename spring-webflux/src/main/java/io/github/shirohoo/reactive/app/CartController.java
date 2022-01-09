@@ -11,28 +11,27 @@ import org.springframework.web.reactive.result.view.Rendering;
 import reactor.core.publisher.Mono;
 
 @Controller
-@RequestMapping("/carts")
 @RequiredArgsConstructor
+@RequestMapping("/carts")
 class CartController {
     private final CartManager cartManager;
 
     @GetMapping
-    Mono<Rendering> viewCart() {
+    public Mono<Rendering> viewCart() {
         return cartManager.viewCart();
     }
 
     @GetMapping("/items")
-    Mono<Rendering> search(
-        @RequestParam(required = false) String name,
+    public Mono<Rendering> search(
+        @RequestParam(required = false) String itemName,
         @RequestParam boolean useAnd
     ) {
-        return cartManager.viewCart(name, useAnd);
+        return cartManager.viewCart(itemName, useAnd);
     }
 
     @PostMapping("/items/{itemId}")
-    Mono<String> addToCart(@PathVariable String itemId) {
-        Mono<Cart> cart = cartManager.findByCartId("MyCart");
-        return cartManager.addToACart(cart, itemId)
+    public Mono<String> addToCart(@PathVariable String itemId) {
+        return cartManager.addItemToCart("MyCart", itemId)
             .thenReturn("redirect:/carts");
     }
 }

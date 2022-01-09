@@ -19,28 +19,29 @@ class CartManager {
     private final ItemRepository itemRepository;
     private final CartRepository cartRepository;
 
-    Mono<Rendering> viewCart() {
+    public Mono<Rendering> viewCart() {
         return rendering(itemRepository.findAll());
     }
 
-    Mono<Rendering> viewCart(String itemId, boolean useAnd) {
-        return rendering(searchByExample(itemId, useAnd));
+    public Mono<Rendering> viewCart(String itemName, boolean useAnd) {
+        return rendering(searchByExample(itemName, useAnd));
     }
 
     private Mono<Rendering> rendering(Flux<Item> itemId) {
         return Mono.just(Rendering.view("cart")
             .modelAttribute("items", itemId)
-            .modelAttribute("cart", findByCartId("MyCart"))
+            .modelAttribute("cart", findByCartIdDefaultEmpty("MyCart"))
             .build());
     }
 
-    Mono<Cart> findByCartId(String cartId) {
+    private Mono<Cart> findByCartIdDefaultEmpty(String cartId) {
         return cartRepository.findById(cartId)
             .defaultIfEmpty(Cart.create("MyCart"));
     }
 
-    Mono<Cart> addToACart(Mono<Cart> cart, String itemId) {
-        return cart.flatMap(cartItem -> getCartItemFrom(cartItem)
+    public Mono<Cart> addItemToCart(String cartId, String itemId) {
+        return findByCartIdDefaultEmpty(cartId)
+            .flatMap(cartItem -> getCartItemFrom(cartItem)
                 .filter(eqItemIdInCartItem(itemId))
                 .findAny()
                 .map(ifAlreadyExistsIncrementBy(cartItem))
