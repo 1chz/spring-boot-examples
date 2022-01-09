@@ -17,12 +17,12 @@ class CartController {
     private final CartManager cartManager;
 
     @GetMapping
-    Mono<Rendering> viewCart() {
+    public Mono<Rendering> viewCart() {
         return cartManager.viewCart();
     }
 
     @GetMapping("/items")
-    Mono<Rendering> search(
+    public Mono<Rendering> search(
         @RequestParam(required = false) String itemName,
         @RequestParam boolean useAnd
     ) {
@@ -30,7 +30,7 @@ class CartController {
     }
 
     @PostMapping("/items/{itemId}")
-    Mono<String> addToCart(@PathVariable String itemId) {
+    public Mono<String> addToCart(@PathVariable String itemId) {
         return cartManager.addItemToCart("MyCart", itemId)
             .thenReturn("redirect:/carts");
     }

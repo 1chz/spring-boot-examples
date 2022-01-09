@@ -19,11 +19,11 @@ class CartManager {
     private final ItemRepository itemRepository;
     private final CartRepository cartRepository;
 
-    Mono<Rendering> viewCart() {
+    public Mono<Rendering> viewCart() {
         return rendering(itemRepository.findAll());
     }
 
-    Mono<Rendering> viewCart(String itemName, boolean useAnd) {
+    public Mono<Rendering> viewCart(String itemName, boolean useAnd) {
         return rendering(searchByExample(itemName, useAnd));
     }
 
@@ -39,7 +39,7 @@ class CartManager {
             .defaultIfEmpty(Cart.create("MyCart"));
     }
 
-    Mono<Cart> addItemToCart(String cartId, String itemId) {
+    public Mono<Cart> addItemToCart(String cartId, String itemId) {
         return findByCartIdDefaultEmpty(cartId)
             .flatMap(cartItem -> getCartItemFrom(cartItem)
                 .filter(eqItemIdInCartItem(itemId))
