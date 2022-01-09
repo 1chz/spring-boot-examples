@@ -48,3 +48,64 @@
 ---
 
 ![image](https://user-images.githubusercontent.com/71188307/148669371-8d363ac1-66f7-4b72-bd03-c85660270602.png)
+
+
+## BlockHound
+
+---
+
+블로킹 API 호출을 감지하는 자바 에이전트이다.
+
+자바 에이전트란 자바가 실행되기 전 먼저 실행되어(premain) 애플리케이션의 바이트 코드를 조작하는 객체이다.
+
+<br />
+
+```groovy
+// build.gradle
+dependencies{
+    implementation'io.projectreactor.tools:blockhound:1.0.6.RELEASE'
+}
+```
+
+<br />
+
+```java
+@SpringBootApplication
+public class Application {
+    public static void main(String[] args) {
+        BlockHound.install(); // 추가
+        SpringApplication.run(Application.class, args);
+    }
+}
+
+```
+
+<br />
+
+애플리케이션을 실행하고 `localhost:8080`으로 진입하면 블록하운드는 블로킹 API가 호출됐음을 감지하고 알려준다.
+
+<br />
+
+![image](https://user-images.githubusercontent.com/71188307/148671222-439b18fb-85b9-489c-99b3-a18a01e3a5cf.JPG)
+
+<br />
+
+이러한 블로킹 API를 감수할 수 있다면 블록하운드가 해당 블로킹 API를 감지하지 않도록 허용(allow)해주면 된다.
+
+<br />
+
+```java
+@SpringBootApplication
+public class Application {
+    public static void main(String[] args) {
+        BlockHound.builder()
+            .allowBlockingCallsInside(TemplateEngine.class.getCanonicalName(), "process")
+            .allowBlockingCallsInside(FileInputStream.class.getCanonicalName(), "readBytes")
+            .install();
+
+        SpringApplication.run(Application.class, args);
+    }
+}
+```
+
+<br />
