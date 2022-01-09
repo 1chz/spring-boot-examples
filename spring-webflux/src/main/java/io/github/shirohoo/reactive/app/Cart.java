@@ -1,15 +1,17 @@
-package io.github.shirohoo.reactive.v2;
+package io.github.shirohoo.reactive.app;
 
 import java.util.ArrayList;
 import java.util.List;
-import lombok.Value;
+import lombok.Getter;
 import org.springframework.data.annotation.Id;
 
-@Value
+@Getter
 class Cart {
     @Id
-    String id;
-    List<CartItem> cartItems;
+    private String id;
+    private List<CartItem> cartItems;
+
+    Cart() {}
 
     private Cart(String id) {
         this(id, new ArrayList<>());

@@ -1,14 +1,16 @@
-package io.github.shirohoo.reactive.v2;
+package io.github.shirohoo.reactive.app;
 
-import lombok.Value;
+import lombok.Getter;
 import org.springframework.data.annotation.Id;
 
-@Value
+@Getter
 class Item {
     @Id
-    String id;
-    String name;
-    double price;
+    private String id;
+    private String name;
+    private double price;
+
+    Item() {}
 
     private Item(String name, double price) {
         this.id = null;
