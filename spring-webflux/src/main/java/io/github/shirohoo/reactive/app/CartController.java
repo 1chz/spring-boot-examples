@@ -2,6 +2,7 @@ package io.github.shirohoo.reactive.app;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,6 +33,12 @@ class CartController {
     @PostMapping("/items/{itemId}")
     public Mono<String> addToCart(@PathVariable String itemId) {
         return cartManager.addItemToCart("MyCart", itemId)
+            .thenReturn("redirect:/carts");
+    }
+
+    @DeleteMapping("/items/{itemId}")
+    public Mono<String> deleteFromCart(@PathVariable String itemId) {
+        return cartManager.deleteFromCart("MyCart", itemId)
             .thenReturn("redirect:/carts");
     }
 }

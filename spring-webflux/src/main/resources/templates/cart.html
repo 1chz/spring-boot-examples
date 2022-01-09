@@ -25,7 +25,8 @@
       </form>
     </td>
     <td>
-      <form method="delete" th:action="@{'/carts/items/'+${item.id}}">
+      <form method="post" th:action="@{'/carts/items/'+${item.id}}">
+        <input type="hidden" name="_method" value="delete">
         <input type="submit" value="Delete from Cart"/>
       </form>
     </td>

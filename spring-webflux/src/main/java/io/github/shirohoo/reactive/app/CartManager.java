@@ -41,11 +41,21 @@ class CartManager {
 
     public Mono<Cart> addItemToCart(String cartId, String itemId) {
         return findByCartIdDefaultEmpty(cartId)
-            .flatMap(cartItem -> getCartItemFrom(cartItem)
+            .flatMap(cart -> getCartItemFrom(cart)
                 .filter(eqItemIdInCartItem(itemId))
                 .findAny()
-                .map(ifAlreadyExistsIncrementBy(cartItem))
-                .orElseGet(ifNotExistsAddTo(itemId, cartItem)))
+                .map(ifAlreadyExistsIncrementBy(cart))
+                .orElseGet(ifNotExistsAddTo(itemId, cart)))
+            .flatMap(cartRepository::save);
+    }
+
+    public Mono<Cart> deleteFromCart(String cartId, String itemId) {
+        return findByCartIdDefaultEmpty(cartId)
+            .flatMap(cart -> getCartItemFrom(cart)
+                .filter(eqItemIdInCartItem(itemId))
+                .findAny()
+                .map(ifAlreadyExistsDecrementBy(cart))
+                .orElse(Mono.just(cart)))
             .flatMap(cartRepository::save);
     }
 
@@ -60,6 +70,13 @@ class CartManager {
     private Function<CartItem, Mono<Cart>> ifAlreadyExistsIncrementBy(Cart cart) {
         return cartItem -> {
             cartItem.increment();
+            return Mono.just(cart);
+        };
+    }
+
+    private Function<CartItem, Mono<Cart>> ifAlreadyExistsDecrementBy(Cart cart) {
+        return cartItem -> {
+            cartItem.decrement();
             return Mono.just(cart);
         };
     }

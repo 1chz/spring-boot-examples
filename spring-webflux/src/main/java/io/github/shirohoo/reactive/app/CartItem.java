@@ -27,6 +27,13 @@ class CartItem {
         this.quantity++;
     }
 
+    public void decrement() {
+        if (quantity == 0) {
+            return;
+        }
+        this.quantity--;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
