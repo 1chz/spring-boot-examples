@@ -16,7 +16,7 @@ class CartItem {
     }
 
     public static CartItem create(Item item) {
-        return of(item, 0);
+        return of(item, 1);
     }
 
     public static CartItem of(Item item, int quantity) {

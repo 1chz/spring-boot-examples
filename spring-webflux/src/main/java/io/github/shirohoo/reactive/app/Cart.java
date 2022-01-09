@@ -18,13 +18,17 @@ class Cart {
         this(id, new ArrayList<>());
     }
 
-    private Cart(String id, ArrayList<CartItem> cartItems) {
+    private Cart(String id, List<CartItem> cartItems) {
         this.id = id;
         this.cartItems = cartItems;
     }
 
     public static Cart create(String id) {
         return new Cart(id);
+    }
+
+    public static Cart create(String id, List<CartItem> cartItems) {
+        return new Cart(id, cartItems);
     }
 
     @Override
