@@ -25,6 +25,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-mongodb-reactive'
     implementation 'org.mongodb:mongodb-driver-sync'
     implementation 'de.flapdoodle.embed:de.flapdoodle.embed.mongo'
+    implementation 'io.projectreactor.tools:blockhound:1.0.6.RELEASE'
     compileOnly 'org.springframework.boot:spring-boot-devtools'
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
