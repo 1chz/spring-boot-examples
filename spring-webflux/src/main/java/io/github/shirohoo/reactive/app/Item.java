@@ -14,13 +14,21 @@ class Item {
     protected Item() {}
 
     private Item(String name, double price) {
-        this.id = null;
+        this(null, name, price);
+    }
+
+    private Item(String id, String name, double price) {
+        this.id = id;
         this.name = name;
         this.price = price;
     }
 
     public static Item of(String name, double price) {
         return new Item(name, price);
+    }
+
+    public static Item update(String id, String name, double price) {
+        return new Item(id, name, price);
     }
 
     @Override
