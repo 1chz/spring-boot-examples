@@ -3,6 +3,7 @@ package io.github.shirohoo.reactive.app;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import lombok.Getter;
 import org.springframework.data.annotation.Id;
 
@@ -29,6 +30,14 @@ class Cart {
 
     public static Cart create(String id, List<CartItem> cartItems) {
         return new Cart(id, cartItems);
+    }
+
+    public Cart removeItems() {
+        this.cartItems = cartItems.stream()
+            .filter(CartItem::isGreaterThanOneQuantity)
+            .collect(Collectors.toList());
+
+        return this;
     }
 
     @Override

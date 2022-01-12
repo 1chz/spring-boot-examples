@@ -55,7 +55,7 @@ class CartManager {
                 .filter(eqItemIdInCartItem(itemId))
                 .findAny()
                 .map(ifAlreadyExistsDecrementBy(cart))
-                .orElse(Mono.just(cart)))
+                .orElse(ifNoQuantityRemove(cart)))
             .flatMap(cartRepository::save);
     }
 
@@ -81,13 +81,17 @@ class CartManager {
         };
     }
 
-    private Supplier<Mono<Cart>> ifNotExistsAddTo(String id, Cart cart) {
-        return () -> itemRepository.findById(id)
+    private Supplier<Mono<Cart>> ifNotExistsAddTo(String itemId, Cart cart) {
+        return () -> itemRepository.findById(itemId)
             .map(CartItem::create)
             .map(cartItem -> {
                 cart.getCartItems().add(cartItem);
                 return cart;
             });
+    }
+
+    private Mono<Cart> ifNoQuantityRemove(Cart cart) {
+        return Mono.just(cart.removeItems());
     }
 
     private Flux<Item> searchByExample(String itemName, boolean useAnd) {

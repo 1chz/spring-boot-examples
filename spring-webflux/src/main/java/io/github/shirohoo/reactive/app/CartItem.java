@@ -34,6 +34,10 @@ class CartItem {
         this.quantity--;
     }
 
+    public boolean isGreaterThanOneQuantity() {
+        return this.quantity > 0;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
