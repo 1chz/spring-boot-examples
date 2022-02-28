@@ -16,10 +16,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @Service
-public class FileSystemFileService implements FileService {
+public class HDDFileService implements FileService {
     private final Path rootLocation;
 
-    public FileSystemFileService(@Value("${location}") String location) {
+    public HDDFileService(@Value("${location}") String location) {
         rootLocation = Paths.get(location);
     }
 
