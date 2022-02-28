@@ -56,6 +56,7 @@ class FileUploadControllerTests {
 
     @Test
     void shouldServedFile() throws Exception {
+        Files.createDirectory(Paths.get("files"));
         Path path = Paths.get("files/test.txt");
         if (Files.notExists(path)) {
             Files.createFile(path);
